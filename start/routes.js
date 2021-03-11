@@ -17,4 +17,8 @@
 const Route = use('Route')
 
 Route.on('/').render('welcome')
-Route.post('/users/register', 'UserController.register')
+// Route.post('/users/register', 'UserController.register')
+// Route.post('/users/list', 'UserController.list')
+// Route.get('/test', 'UserController.test')
+Route.get('/units', 'UnitsController.index')
+Route.put('/units', 'UnitsController.update')
