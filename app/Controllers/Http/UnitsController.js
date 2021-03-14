@@ -34,7 +34,6 @@ class UnitsController {
       if(!request.get().id) return response.status(400).send({ message: "invalid id" })
       const unit_id = mongoose.Types.ObjectId(request.get().id);
       const unit = await mongoClient.collection('units').findOne({_id: unit_id})
-      // console.log(unit)
       if(unit){
         if(request.get().username){
           if(unit.username == request.get().username){
@@ -78,37 +77,27 @@ class UnitsController {
       if(!request.get().id) return response.status(400).send({ message: "invalid id" })
       const unit_id = mongoose.Types.ObjectId(request.get().id);
       const unit = await mongoClient.collection('units').findOne({_id: unit_id})
-      // console.log(unit)
       if(unit){
         if(request.get().username){
           if(unit.username == request.get().username){
             let datetime_now = new Date()
-            // datetime_now.setHours(datetime_now.getHours())
-
-            console.log('datetime_now : ',datetime_now)
 
             let datetime_now_milisec = datetime_now.getTime()
             let return_date_milisec = (new Date(unit.return_date)).getTime()
-            console.log('datetime_now_milisec : ',datetime_now_milisec)
-            console.log('return_date_milisec : ',return_date_milisec)
 
             let overtime_min = parseInt((datetime_now_milisec - return_date_milisec) / 60000)
-            console.log('overtime_min : ',overtime_min)
 
             let obj = {}
 
             if(overtime_min > 0){ // overtime
-              console.log('เกินมา : ', overtime_min)
               obj.cost = unit.cost - (overtime_min * unit.rate_next_min)
               obj.is_over = true
             }
-            else if(overtime_min == 0){
-              console.log('เท่ากัน')
+            else if(overtime_min == 0){ // equal
               obj.is_over = false
               obj.cost = 0
             }
-            else{
-              console.log('ก่อนเวลา', Math.abs(overtime_min))
+            else{ // before time
               obj.is_over = false
               let deposit_date_milisec = (new Date(unit.deposit_date)).getTime()
               let duration_deposit = parseInt((datetime_now_milisec - deposit_date_milisec) / 60000) // start -> now
@@ -146,13 +135,10 @@ class UnitsController {
       if(!request.get().id) return response.status(400).send({ message: "invalid id" })
       const unit_id = mongoose.Types.ObjectId(request.get().id);
       const unit = await mongoClient.collection('units').findOne({_id: unit_id})
-      // console.log(unit)
       if(unit){
-        console.log('unit.username : ',unit.username)
         if(!unit.username){
           if(request.post().summary_minutes && request.post().cost && request.post().username){
             let datetime_now = new Date()
-            // datetime_now.setHours(datetime_now.getHours()) // not +7 // 200 not found (not found data in database) //403 invalid param
 
             let setObj = {
               is_empty: false,
@@ -161,7 +147,6 @@ class UnitsController {
               username: request.post().username,
               duration_min: Number(request.post().summary_minutes)
             }
-            // console.log(setObj)
             await mongoClient.collection('units').updateOne({ _id: unit_id }, 
               { 
                 $set: setObj
@@ -190,13 +175,10 @@ class UnitsController {
       if(!request.get().id) return response.status(400).send({ message: "invalid id" })
       const unit_id = mongoose.Types.ObjectId(request.get().id);
       const unit = await mongoClient.collection('units').findOne({_id: unit_id})
-      // console.log(unit)
       if(unit){
-        console.log('unit.username : ',unit.username)
         if(!unit.username){
           if(request.post().summary_minutes && request.post().cost && request.post().username){
             let datetime_now = new Date()
-            // datetime_now.setHours(datetime_now.getHours()) // not +7 // 200 not found (not found data in database) //403 invalid param
 
             let sum_min = Number(request.post().summary_minutes)
             let calculate_return_date = datetime_now.getTime() + (sum_min * 60000) // convert min to milisecond
@@ -211,7 +193,6 @@ class UnitsController {
               username: request.post().username,
               duration_min: calculate_duration_min
             }
-            // console.log(setObj)
             await mongoClient.collection('units').updateOne({ _id: unit_id }, 
               { 
                 $set: setObj
@@ -241,7 +222,6 @@ class UnitsController {
       if(!request.get().id) return response.status(400).send({ message: "invalid id" })
       const unit_id = mongoose.Types.ObjectId(request.get().id);
       const unit = await mongoClient.collection('units').findOne({_id: unit_id})
-      // console.log(unit)
       if(unit){
         if(request.post().username){
           if(unit.username == request.post().username){
@@ -271,8 +251,7 @@ class UnitsController {
       }
       else return response.status(200).send({ message: "id not found" })
     } catch (error){
-      // response.status(500).send({ message: 'Internal Server Error' })
-      response.status(500).send({ message: error.message })
+      response.status(500).send({ message: 'Internal Server Error' })
     }
   }
 
