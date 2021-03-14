@@ -20,7 +20,8 @@ const providers = [
   '@adonisjs/session/providers/SessionProvider',
   '@adonisjs/auth/providers/AuthProvider',
   'lucid-mongo/providers/LucidMongoProvider',
-  'adonis-mongoose/providers/MongooseProvider'
+  'adonis-mongoose/providers/MongooseProvider',
+  '@adonisjs/websocket/providers/WsProvider'
 ]
 
 /*
@@ -50,7 +51,8 @@ const aceProviders = [
 |
 */
 const aliases = {
-  Mongoose: 'Adonis/Addons/AdonisMongoose'
+  Mongoose: 'Adonis/Addons/AdonisMongoose',
+  Ws: 'Adonis/Addons/Ws'
 }
 
 /*
