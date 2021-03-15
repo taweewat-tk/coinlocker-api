@@ -197,8 +197,8 @@ class UnitsController {
       const unit_id = mongoose.Types.ObjectId(request.get().id);
       const unit = await collection.findOne({_id: unit_id})
       if(unit){
-        if(!unit.username){
-          if(request.post().summary_minutes && request.post().cost && request.post().username){
+        if(request.post().summary_minutes && request.post().cost && request.post().username){
+          if(unit.username == request.post().username){
             let datetime_now = new Date()
 
             let setObj = {
@@ -215,9 +215,9 @@ class UnitsController {
             )
             return response.status(200).send({ message: 'success' })
           }
-          else return response.status(400).send({ message: "invalid parameter" })
+          else return response.status(200).send({ message: "unit is unavailable" }) 
         }
-        else return response.status(200).send({ message: "unit is unavailable" }) 
+        else return response.status(400).send({ message: "invalid parameter" })
       } 
       else return response.status(200).send({ message: "id not found" })
     }
