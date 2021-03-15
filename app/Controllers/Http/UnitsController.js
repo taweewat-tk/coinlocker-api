@@ -1,8 +1,9 @@
 'use strict'
+const { ServiceProvider } = require('@adonisjs/fold')
 var mongoose = require('mongoose')
 // const Unit = use('App/Models/Unit')
 
-class UnitsController {
+class UnitsController extends ServiceProvider {
   async index({ request, response }){
     let client;
     try{
