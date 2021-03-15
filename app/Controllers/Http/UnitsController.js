@@ -3,37 +3,66 @@ var mongoose = require('mongoose')
 // const Unit = use('App/Models/Unit')
 
 class UnitsController {
-  async index ({ request, response }) {
-    try {
-      const Database = use('Database')
-      const mongoClient = await Database.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/${process.env.DB_DATABASE}?retryWrites=true&w=majority`,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true
-        }
-      )
-      const units = await mongoClient.collection('units').find().toArray()
-      if(units){
-        return response.status(200).send({ message: 'success', result: units })
-      }
-      return response.status(200).send({ message: 'not found units' })
-    } catch (error) {
-      response.status(500).send({ message: 'Internal Server Error' })
+  async index({ request, response }){
+    let client;
+    try{
+      const MongoClient = require('mongodb').MongoClient
+      const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/${process.env.DB_DATABASE}?retryWrites=true&w=majority`
+      client = await MongoClient.connect(uri, {useNewUrlParser: true});
+      const collection = client.db("coinlocker").collection("units");
+      const units = await collection.find().toArray()
+      return response.status(200).send({ message: 'success', result: units })
     }
-  }
+    catch(err){ return response.status(500).send({ message: err.message }) } // catch any mongo error here
+    // catch(err){ return response.status(500).send({ message: 'Internal Server Error' }) } // catch any mongo error here
+    finally{ client.close(); } // make sure to close your connection after
+   }
+
+
+  // async index ({ request, response }) {
+  //   try {
+  //     // const Database = use('Database')
+  //     // const mongoClient = await Database.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/${process.env.DB_DATABASE}?retryWrites=true&w=majority`,
+  //     //   {
+  //     //     useNewUrlParser: true,
+  //     //     useUnifiedTopology: true
+  //     //   }
+  //     // )
+  //     const MongoClient = require('mongodb').MongoClient
+  //     const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/?retryWrites=true&w=majority`
+  //     const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true })
+  //     await client.connect()
+
+  //     // return response.status(200).send({ message: 'success'})
+  //     // console.log('TEST')
+  //     // const collection = client.db("coinlocker").collection("units");
+
+  //     // const units = await collection.find().toArray()
+  //     // return response.status(200).send({ message: 'success', result: units })
+
+
+  //     // const units = await mongoClient.collection('units').find().toArray()
+  //     // if(units){
+  //     //   return response.status(200).send({ message: 'success', result: units })
+  //     // }
+  //     // return response.status(200).send({ message: 'not found units' })
+  //   } catch (error) {
+  //     console.log(error)
+  //     response.status(500).send({ message: 'Internal Server Error' })
+  //   }
+  //   return response.status(200).send({ message: 'success'})
+  // }
 
   async unit ({ request, response }){
+    let client;
     try{
-      const Database = use('Database')
-      const mongoClient = await Database.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/${process.env.DB_DATABASE}?retryWrites=true&w=majority`,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true
-        }
-      )
+      const MongoClient = require('mongodb').MongoClient
+      const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/?retryWrites=true&w=majority`
+      client = await MongoClient.connect(uri, {useNewUrlParser: true});
+      const collection = client.db("coinlocker").collection("units");
       if(!request.get().id) return response.status(400).send({ message: "invalid id" })
       const unit_id = mongoose.Types.ObjectId(request.get().id);
-      const unit = await mongoClient.collection('units').findOne({_id: unit_id})
+      const unit = await collection.findOne({_id: unit_id})
       if(unit){
         if(request.get().username){
           if(unit.username == request.get().username){
@@ -57,13 +86,57 @@ class UnitsController {
           }
           else return response.status(200).send({ message: "username is not the same username as the depositor" })
         }
-        else return response.status(400).send({ message: "invalid username" })
+        else return response.status(400).send({ message: "invalid parameter" })
       }
       else return response.status(200).send({ message: "id not found" })
-    } catch (error){
-      response.status(500).send({ message: 'Internal Server Error' })
     }
+    catch(err){ return response.status(500).send({ message: 'Internal Server Error' }) } // catch any mongo error here
+    finally{ client.close(); } // make sure to close your connection after
   }
+
+
+  // async unit ({ request, response }){
+  //   try{
+  //     const Database = use('Database')
+  //     const mongoClient = await Database.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/${process.env.DB_DATABASE}?retryWrites=true&w=majority`,
+  //       {
+  //         useNewUrlParser: true,
+  //         useUnifiedTopology: true
+  //       }
+  //     )
+  //     if(!request.get().id) return response.status(400).send({ message: "invalid id" })
+  //     const unit_id = mongoose.Types.ObjectId(request.get().id);
+  //     const unit = await mongoClient.collection('units').findOne({_id: unit_id})
+  //     if(unit){
+  //       if(request.get().username){
+  //         if(unit.username == request.get().username){
+
+  //           let summary_cost = 0;
+  //           if( (unit.duration_min - 60) >= 0 ){
+  //             let fees_next_min = (unit.duration_min - 60) * unit.rate_next_min
+  //             summary_cost = unit.rate + fees_next_min
+  //           }
+  //           else{
+  //             summary_cost = unit.rate
+  //           }
+
+  //           let refund = unit.cost - summary_cost
+  //           let obj = {
+  //             cost: refund,
+  //             _id: unit._id,
+  //             name: unit.name
+  //           }
+  //           return response.status(200).send({ message: 'success', result: obj })
+  //         }
+  //         else return response.status(200).send({ message: "username is not the same username as the depositor" })
+  //       }
+  //       else return response.status(400).send({ message: "invalid username" })
+  //     }
+  //     else return response.status(200).send({ message: "id not found" })
+  //   } catch (error){
+  //     response.status(500).send({ message: 'Internal Server Error' })
+  //   }
+  // }
 
   async unit_datenow ({ request, response }){
     try{
@@ -124,17 +197,15 @@ class UnitsController {
   }
 
   async deposit ({ request, response }){
+    let client;
     try{
-      const Database = use('Database')
-      const mongoClient = await Database.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/${process.env.DB_DATABASE}?retryWrites=true&w=majority`,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true
-        }
-      )
+      const MongoClient = require('mongodb').MongoClient
+      const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/?retryWrites=true&w=majority`
+      client = await MongoClient.connect(uri, {useNewUrlParser: true});
+      const collection = client.db("coinlocker").collection("units");
       if(!request.get().id) return response.status(400).send({ message: "invalid id" })
       const unit_id = mongoose.Types.ObjectId(request.get().id);
-      const unit = await mongoClient.collection('units').findOne({_id: unit_id})
+      const unit = await collection.findOne({_id: unit_id})
       if(unit){
         if(!unit.username){
           if(request.post().summary_minutes && request.post().cost && request.post().username){
@@ -147,7 +218,7 @@ class UnitsController {
               username: request.post().username,
               duration_min: Number(request.post().summary_minutes)
             }
-            await mongoClient.collection('units').updateOne({ _id: unit_id }, 
+            await collection.updateOne({ _id: unit_id }, 
               { 
                 $set: setObj
               }
@@ -159,10 +230,52 @@ class UnitsController {
         else return response.status(200).send({ message: "unit is unavailable" }) 
       } 
       else return response.status(200).send({ message: "id not found" })
-    } catch (error){
-      response.status(500).send({ message: 'Internal Server Error' })
     }
+    catch(err){ return response.status(500).send({ message: 'Internal Server Error' }) } // catch any mongo error here
+    finally{ client.close(); } // make sure to close your connection after
   }
+
+  // async deposit ({ request, response }){
+  //   try{
+  //     const Database = use('Database')
+  //     const mongoClient = await Database.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/${process.env.DB_DATABASE}?retryWrites=true&w=majority`,
+  //       {
+  //         useNewUrlParser: true,
+  //         useUnifiedTopology: true
+  //       }
+  //     )
+  //     if(!request.get().id) return response.status(400).send({ message: "invalid id" })
+  //     const unit_id = mongoose.Types.ObjectId(request.get().id);
+  //     const unit = await mongoClient.collection('units').findOne({_id: unit_id})
+  //     if(unit){
+  //       if(!unit.username){
+  //         if(request.post().summary_minutes && request.post().cost && request.post().username){
+  //           let datetime_now = new Date()
+
+  //           let setObj = {
+  //             is_empty: false,
+  //             deposit_date: datetime_now,
+  //             cost: Number(request.post().cost),
+  //             username: request.post().username,
+  //             duration_min: Number(request.post().summary_minutes)
+  //           }
+  //           await mongoClient.collection('units').updateOne({ _id: unit_id }, 
+  //             { 
+  //               $set: setObj
+  //             }
+  //           )
+  //           return response.status(200).send({ message: 'success' })
+  //         }
+  //         else return response.status(400).send({ message: "invalid parameter" })
+  //       }
+  //       else return response.status(200).send({ message: "unit is unavailable" }) 
+  //     } 
+  //     else return response.status(200).send({ message: "id not found" })
+  //   } catch (error){
+  //     response.status(500).send({ message: 'Internal Server Error' })
+  //   }
+  // }
+
   async deposit_datenow ({ request, response }){
     try{
       const Database = use('Database')
@@ -211,17 +324,15 @@ class UnitsController {
   }
 
   async withdraw ({ request, response }){
+    let client;
     try{
-      const Database = use('Database')
-      const mongoClient = await Database.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/${process.env.DB_DATABASE}?retryWrites=true&w=majority`,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true
-        }
-      )
+      const MongoClient = require('mongodb').MongoClient
+      const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/?retryWrites=true&w=majority`
+      client = await MongoClient.connect(uri, {useNewUrlParser: true});
+      const collection = client.db("coinlocker").collection("units");
       if(!request.get().id) return response.status(400).send({ message: "invalid id" })
       const unit_id = mongoose.Types.ObjectId(request.get().id);
-      const unit = await mongoClient.collection('units').findOne({_id: unit_id})
+      const unit = await collection.findOne({_id: unit_id})
       if(unit){
         if(request.post().username){
           if(unit.username == request.post().username){
@@ -234,7 +345,7 @@ class UnitsController {
                 username: '',
                 duration_min: 0
               }
-              await mongoClient.collection('units').updateOne({ _id: unit_id }, 
+              await collection.updateOne({ _id: unit_id }, 
                 {
                   $set: setObj
                 }
@@ -247,16 +358,64 @@ class UnitsController {
           }
           else return response.status(200).send({ message: "username is not the same username as the depositor" })
         }
-        else return response.status(400).send({ message: "invalid username" })
+        else return response.status(400).send({ message: "invalid parameter" })
       }
       else return response.status(200).send({ message: "id not found" })
-    } catch (error){
-      response.status(500).send({ message: 'Internal Server Error' })
     }
+    catch(err){ return response.status(500).send({ message: 'Internal Server Error' }) } // catch any mongo error here
+    finally{ client.close(); } // make sure to close your connection after
   }
 
+  // async withdraw ({ request, response }){
+  //   try{
+  //     const Database = use('Database')
+  //     const mongoClient = await Database.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/${process.env.DB_DATABASE}?retryWrites=true&w=majority`,
+  //       {
+  //         useNewUrlParser: true,
+  //         useUnifiedTopology: true
+  //       }
+  //     )
+  //     if(!request.get().id) return response.status(400).send({ message: "invalid id" })
+  //     const unit_id = mongoose.Types.ObjectId(request.get().id);
+  //     const unit = await mongoClient.collection('units').findOne({_id: unit_id})
+  //     if(unit){
+  //       if(request.post().username){
+  //         if(unit.username == request.post().username){
+  //           if(unit.is_empty == false){
+  //             let setObj = {
+  //               is_empty: true,
+  //               deposit_date: '',
+  //               cost: 0,
+  //               return_date: '',
+  //               username: '',
+  //               duration_min: 0
+  //             }
+  //             await mongoClient.collection('units').updateOne({ _id: unit_id }, 
+  //               {
+  //                 $set: setObj
+  //               }
+  //             )
+  //             return response.status(200).send({ message: 'success' })
+  //           }
+  //           else{
+  //             return response.status(200).send({ message: 'unit is empty' })
+  //           }
+  //         }
+  //         else return response.status(200).send({ message: "username is not the same username as the depositor" })
+  //       }
+  //       else return response.status(400).send({ message: "invalid username" })
+  //     }
+  //     else return response.status(200).send({ message: "id not found" })
+  //   } catch (error){
+  //     response.status(500).send({ message: 'Internal Server Error' })
+  //   }
+  // }
+
   async migrate ({ request, response }){
+    let client;
     try{
+      // const MongoClient = require('mongodb').MongoClient
+      // const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/${process.env.DB_DATABASE}?retryWrites=true&w=majority`
       const Database = use('Database')
       const mongoClient = await Database.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/${process.env.DB_DATABASE}?retryWrites=true&w=majority`,
         {
@@ -264,7 +423,7 @@ class UnitsController {
           useUnifiedTopology: true
         }
       )
-      
+      const collection = await mongoClient.collection("units");
       let units_list = []
       for(let i=0;i<12;i++){
         let obj = {
@@ -296,12 +455,14 @@ class UnitsController {
         }
         units_list.push(obj)
       }
-      await mongoClient.collection('units').insertMany(units_list)
-      response.status(200).send({ message: 'success'})
-    } catch (error){
-      response.status(500).send({ message: 'Internal Server Error' })
+      await collection.insertMany(units_list)
+      return response.status(200).send({ message: 'success'})
     }
-  }
+    catch(err){ return response.status(500).send({ message: err.message }) } // catch any mongo error here
+    // catch(err){ return response.status(500).send({ message: 'Internal Server Error' }) } // catch any mongo error here
+    // finally{ client.close(); } // make sure to close your connection after
+   }
+
 }
 
 module.exports = UnitsController
