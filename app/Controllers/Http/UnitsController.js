@@ -47,7 +47,7 @@ class UnitsController {
               summary_cost = unit.rate
             }
 
-            let refund = unit.cost - summary_cost
+            let refund = Math.abs(unit.cost - summary_cost)
             let obj = {
               cost: refund,
               _id: unit._id,
