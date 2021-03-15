@@ -5,6 +5,14 @@ class UnitsController {
   async index({ request, response }){
     let client;
     try{
+      // const Database = use('Database')
+      // client = await Database.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/${process.env.DB_DATABASE}?retryWrites=true&w=majority`,
+      //   {
+      //     useNewUrlParser: true,
+      //     useUnifiedTopology: true
+      //   }
+      // )
+      // const collection = client.collection("units");
       const MongoClient = require('mongodb').MongoClient
       const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/?retryWrites=true&w=majority`
       client = await MongoClient.connect(uri, {useNewUrlParser: true});
@@ -47,7 +55,7 @@ class UnitsController {
             }
             return response.status(200).send({ message: 'success', result: obj })
           }
-          else return response.status(200).send({ message: "username is not the same username as the depositor" })
+          else return response.status(200).send({ message: "unit is unavailable" })
         }
         else return response.status(400).send({ message: "invalid parameter" })
       }
@@ -82,7 +90,7 @@ class UnitsController {
         }
         else return response.status(400).send({ message: "invalid parameter" })
       }
-      else return response.status(200).send({ message: 'unit has been reserved' })
+      else return response.status(200).send({ message: 'unit is unavailable' })
     } catch(err){ return response.status(500).send({ message: 'Internal Server Error' }) } // catch any mongo error here
     finally{ client.close(); } // make sure to close your connection after
   }
@@ -111,7 +119,7 @@ class UnitsController {
             )
             return response.status(200).send({ message: 'success' })
           }
-          else return response.status(200).send({ message: "username is not the same username as the depositor" })
+          else return response.status(200).send({ message: "unit is unavailable" })
         }
         else return response.status(400).send({ message: "invalid parameter" })
       }
@@ -295,7 +303,7 @@ class UnitsController {
             }
             else return response.status(200).send({ message: 'unit is empty' })
           }
-          else return response.status(200).send({ message: "username is not the same username as the depositor" })
+          else return response.status(200).send({ message: "unit is unavailable" })
         }
         else return response.status(400).send({ message: "invalid parameter" })
       }
