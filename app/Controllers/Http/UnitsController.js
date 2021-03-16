@@ -5,14 +5,6 @@ class UnitsController {
   async index({ request, response }){
     let client;
     try{
-      // const Database = use('Database')
-      // client = await Database.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/${process.env.DB_DATABASE}?retryWrites=true&w=majority`,
-      //   {
-      //     useNewUrlParser: true,
-      //     useUnifiedTopology: true
-      //   }
-      // )
-      // const collection = client.collection("units");
       const MongoClient = require('mongodb').MongoClient
       const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/?retryWrites=true&w=majority`
       client = await MongoClient.connect(uri, {useNewUrlParser: true});
@@ -128,64 +120,6 @@ class UnitsController {
     finally{ client.close(); } // make sure to close your connection after
   }
 
-  async unit_datenow ({ request, response }){
-    try{
-      const Database = use('Database')
-      const mongoClient = await Database.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/${process.env.DB_DATABASE}?retryWrites=true&w=majority`,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true
-        }
-      )
-      if(!request.get().id) return response.status(400).send({ message: "invalid id" })
-      const unit_id = mongoose.Types.ObjectId(request.get().id);
-      const unit = await mongoClient.collection('units').findOne({_id: unit_id})
-      if(unit){
-        if(request.get().username){
-          if(unit.username == request.get().username){
-            let datetime_now = new Date()
-
-            let datetime_now_milisec = datetime_now.getTime()
-            let return_date_milisec = (new Date(unit.return_date)).getTime()
-
-            let overtime_min = parseInt((datetime_now_milisec - return_date_milisec) / 60000)
-
-            let obj = {}
-
-            if(overtime_min > 0){ // overtime
-              obj.cost = unit.cost - (overtime_min * unit.rate_next_min)
-              obj.is_over = true
-            }
-            else if(overtime_min == 0){ // equal
-              obj.is_over = false
-              obj.cost = 0
-            }
-            else{ // before time
-              obj.is_over = false
-              let deposit_date_milisec = (new Date(unit.deposit_date)).getTime()
-              let duration_deposit = parseInt((datetime_now_milisec - deposit_date_milisec) / 60000) // start -> now
-              if(duration_deposit > 60){ // time to deposit more than 60 min
-                obj.cost = unit.cost - (unit.rate + (Math.abs(overtime_min) * unit.rate_next_min)) // cost of next min
-              }
-              else{
-                obj.cost = unit.rate
-              }
-            }
-            obj._id = unit._id
-            obj.name = unit.name
-            obj.minutes = Math.abs(overtime_min)
-            return response.status(200).send({ message: 'success', result: obj })
-          }
-          else return response.status(200).send({ message: "username is not the same username as the depositor" })
-        }
-        else return response.status(400).send({ message: "invalid username" })
-      }
-      else return response.status(200).send({ message: "id not found" })
-    } catch (error){
-      response.status(500).send({ message: 'Internal Server Error' })
-    }
-  }
-
   async deposit ({ request, response }){
     let client;
     try{
@@ -223,53 +157,6 @@ class UnitsController {
     }
     catch(err){ return response.status(500).send({ message: 'Internal Server Error' }) } // catch any mongo error here
     finally{ client.close(); } // make sure to close your connection after
-  }
-
-  async deposit_datenow ({ request, response }){
-    try{
-      const Database = use('Database')
-      const mongoClient = await Database.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/${process.env.DB_DATABASE}?retryWrites=true&w=majority`,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true
-        }
-      )
-      if(!request.get().id) return response.status(400).send({ message: "invalid id" })
-      const unit_id = mongoose.Types.ObjectId(request.get().id);
-      const unit = await mongoClient.collection('units').findOne({_id: unit_id})
-      if(unit){
-        if(!unit.username){
-          if(request.post().summary_minutes && request.post().cost && request.post().username){
-            let datetime_now = new Date()
-
-            let sum_min = Number(request.post().summary_minutes)
-            let calculate_return_date = datetime_now.getTime() + (sum_min * 60000) // convert min to milisecond
-            let return_date = new Date(calculate_return_date) // convert milisecond to format date
-            let calculate_duration_min = parseInt(calculate_return_date / 60000)
-
-            let setObj = {
-              is_empty: false,
-              deposit_date: datetime_now,
-              cost: Number(request.post().cost),
-              return_date: return_date,
-              username: request.post().username,
-              duration_min: calculate_duration_min
-            }
-            await mongoClient.collection('units').updateOne({ _id: unit_id }, 
-              { 
-                $set: setObj
-              }
-            )
-            return response.status(200).send({ message: 'success' })
-          }
-          else return response.status(400).send({ message: "invalid parameter" })
-        }
-        else return response.status(200).send({ message: "unit is unavailable" }) 
-      } 
-      else return response.status(200).send({ message: "id not found" })
-    } catch (error){
-      response.status(500).send({ message: 'Internal Server Error' })
-    }
   }
 
   async withdraw ({ request, response }){
