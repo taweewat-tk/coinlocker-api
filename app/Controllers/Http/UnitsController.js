@@ -138,6 +138,7 @@ class UnitsController {
             let setObj = {
               is_empty: false,
               deposit_date: datetime_now,
+              return_date: '',
               cost: Number(request.post().cost),
               username: request.post().username,
               duration_min: Number(request.post().summary_minutes)
@@ -173,11 +174,12 @@ class UnitsController {
         if(request.post().username){
           if(unit.username == request.post().username){
             if(unit.is_empty == false){
+              let datetime_now = new Date()
               let setObj = {
                 is_empty: true,
                 deposit_date: '',
                 cost: 0,
-                return_date: '',
+                return_date: datetime_now,
                 username: '',
                 duration_min: 0
               }
